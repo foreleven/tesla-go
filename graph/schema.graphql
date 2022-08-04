@@ -1,0 +1,27 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+scalar Map
+
+type Query {
+  vehicles: [Vehicle]!
+}
+
+type Mutation {
+  login(token: String!): String!
+}
+
+type Vehicle {
+  id: ID!
+  vehicleID: String!
+  vin: String
+  displayName: String!
+  color: Map
+  tokens: [String]
+  state: String!
+  inService: Boolean!
+  ids: String!
+  calendarEnabled: Boolean!
+  apiVersion: Int!
+}
