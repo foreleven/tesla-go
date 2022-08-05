@@ -21,11 +21,11 @@ type Vehicle struct {
 }
 
 type VehiclesResult struct {
-	Count    int       `json:"count"`
-	Response []Vehicle `json:"reponse"`
+	Count    int        `json:"count"`
+	Response []*Vehicle `json:"reponse"`
 }
 
-func (c *Client) Vehicles() ([]Vehicle, error) {
+func (c *Client) Vehicles() ([]*Vehicle, error) {
 	body, err := c.get("/api/1/vehicles")
 	if err != nil {
 		return nil, err

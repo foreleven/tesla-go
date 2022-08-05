@@ -5,34 +5,39 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"strconv"
+	"tesla-go/core"
 	"tesla-go/graph/generated"
 	"tesla-go/tesla"
 )
 
 // Login is the resolver for the login field.
 func (r *mutationResolver) Login(ctx context.Context, token string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	auth, err := core.Create(token)
+	if err != nil {
+		return "", errors.New("bad token")
+	} else {
+		return auth.Token(), nil
+	}
 }
 
 // Vehicles is the resolver for the vehicles field.
 func (r *queryResolver) Vehicles(ctx context.Context) ([]*tesla.Vehicle, error) {
-	panic(fmt.Errorf("not implemented"))
+	c := core.ForContext(ctx)
+	c.HasAuthorized()
+	client := c.GetClient()
+	return client.Vehicles()
 }
 
 // ID is the resolver for the id field.
 func (r *vehicleResolver) ID(ctx context.Context, obj *tesla.Vehicle) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	return string(obj.ID), nil
 }
 
 // VehicleID is the resolver for the vehicleID field.
 func (r *vehicleResolver) VehicleID(ctx context.Context, obj *tesla.Vehicle) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// Color is the resolver for the color field.
-func (r *vehicleResolver) Color(ctx context.Context, obj *tesla.Vehicle) (map[string]interface{}, error) {
-	panic(fmt.Errorf("not implemented"))
+	return strconv.FormatInt(obj.VehicleID, 10), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

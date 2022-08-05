@@ -77,8 +77,6 @@ type QueryResolver interface {
 type VehicleResolver interface {
 	ID(ctx context.Context, obj *tesla.Vehicle) (string, error)
 	VehicleID(ctx context.Context, obj *tesla.Vehicle) (string, error)
-
-	Color(ctx context.Context, obj *tesla.Vehicle) (map[string]interface{}, error)
 }
 
 type executableSchema struct {
@@ -264,6 +262,7 @@ var sources = []*ast.Source{
 # https://gqlgen.com/getting-started/
 
 scalar Map
+scalar Any
 
 type Query {
   vehicles: [Vehicle]!
@@ -278,7 +277,7 @@ type Vehicle {
   vehicleID: String!
   vin: String
   displayName: String!
-  color: Map
+  color: Any
   tokens: [String]
   state: String!
   inService: Boolean!
@@ -801,7 +800,7 @@ func (ec *executionContext) _Vehicle_color(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Vehicle().Color(rctx, obj)
+		return obj.Color, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -810,19 +809,19 @@ func (ec *executionContext) _Vehicle_color(ctx context.Context, field graphql.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(map[string]interface{})
+	res := resTmp.(interface{})
 	fc.Result = res
-	return ec.marshalOMap2map(ctx, field.Selections, res)
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Vehicle_color(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Vehicle",
 		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Map does not have child fields")
+			return nil, errors.New("field of type Any does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3036,22 +3035,9 @@ func (ec *executionContext) _Vehicle(ctx context.Context, sel ast.SelectionSet, 
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "color":
-			field := field
 
-			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Vehicle_color(ctx, field, obj)
-				return res
-			}
+			out.Values[i] = ec._Vehicle_color(ctx, field, obj)
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
-
-			})
 		case "tokens":
 
 			out.Values[i] = ec._Vehicle_tokens(ctx, field, obj)
@@ -3771,6 +3757,22 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) unmarshalOAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalAny(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalAny(v)
+	return res
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3794,22 +3796,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	res := graphql.MarshalBoolean(*v)
-	return res
-}
-
-func (ec *executionContext) unmarshalOMap2map(ctx context.Context, v interface{}) (map[string]interface{}, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalMap(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOMap2map(ctx context.Context, sel ast.SelectionSet, v map[string]interface{}) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	res := graphql.MarshalMap(v)
 	return res
 }
 

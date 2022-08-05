@@ -1,15 +1,17 @@
 package main
 
 import (
+	"log"
 	"os"
+	"tesla-go/core"
 	"tesla-go/graph"
 	"tesla-go/graph/generated"
-	"tesla-go/tesla"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/joho/godotenv"
 )
 
 const defaultPort = "8080"
@@ -27,7 +29,7 @@ func graphqlHandler() gin.HandlerFunc {
 
 // Defining the Playground handler
 func playgroundHandler() gin.HandlerFunc {
-	h := playground.Handler("GraphQL", "/query")
+	h := playground.Handler("GraphQL", "/graphql")
 
 	return func(c *gin.Context) {
 		h.ServeHTTP(c.Writer, c.Request)
@@ -35,6 +37,10 @@ func playgroundHandler() gin.HandlerFunc {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
@@ -42,14 +48,9 @@ func main() {
 
 	r := gin.Default()
 
-	tesla.NewClient(tesla.ClientOptions{
-		AuthToken: tesla.AuthToken{
-			AccessToken: "123",
-		},
-		Region: tesla.China,
-	})
+	r.Use(core.RequestContextMiddleware())
 
-	r.POST("/query", graphqlHandler())
-	r.GET("/", playgroundHandler())
+	r.POST("/graphql", graphqlHandler())
+	r.GET("/graphql", playgroundHandler())
 	r.Run()
 }

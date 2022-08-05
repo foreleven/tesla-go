@@ -3,6 +3,7 @@
 # https://gqlgen.com/getting-started/
 
 scalar Map
+scalar Any
 
 type Query {
   vehicles: [Vehicle]!
@@ -17,7 +18,7 @@ type Vehicle {
   vehicleID: String!
   vin: String
   displayName: String!
-  color: Map
+  color: Any
   tokens: [String]
   state: String!
   inService: Boolean!
